@@ -10,12 +10,13 @@
     <form method="POST" enctype="multipart/form-data" id="add_image_form">
       {{ form.hidden_tag() }}
 
-      {% for field in form %}
+      {% for field in form
+        if field.widget.input_type != 'hidden' %}
       {% for error in field.errors %}
       <span class="text-danger">{{ error }}</span>
       {% endfor %}
-      <!-- <label>{{ field.label.text }}</label> -->
-      {{ field(placeholder=field.label.text, class="form-control") }}
+      <label>{{ field.label }}</label>
+      {{ field(class="form-control") }}
       {% endfor %}
 
       <button class="btn btn-primary btn-lg">Upload!</button>
