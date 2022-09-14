@@ -1,44 +1,51 @@
-# """SQLAlchemy models for Pixly."""
+"""SQLAlchemy models for Pixly."""
 
-# from datetime import datetime
-# from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
-# db = SQLAlchemy()
+db = SQLAlchemy()
 
-# class Image(db.Model):
-#     """Table for images."""
 
-#     __tablename__ = 'images'
+class Image(db.Model):
+    """Table for images."""
 
-#     id = db.Column(
-#         db.Integer,
-#         primary_key=True,
-#         autoincrement=True
-#     )
+    __tablename__ = 'images'
 
-#     image_name = db.Column(
-#         db.String(50),
-#         nullable=False
-#     )
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
 
-#     file_name = db.Column(
-#         db.String,
-#         nullable=False
-#     )
+    image_name = db.Column(
+        db.String(50),
+        nullable=False
+    )
 
-#     notes = db.Column(
-#         db.String
-#     )
+    uploaded_by = db.Column(
+        db.String,
+        nullable=False
+    )
 
-#     upload_date = db.Column(
-#         datetime,
-#         nullable=False
-#     )
+    file_name = db.Column(
+        db.String,
+        nullable=False
+    )
 
-#     amazon_file_path = db.Column(
-#         db.String,
-#         nullable=False
-#     )
+    notes = db.Column(
+        db.String
+    )
+
+    upload_date = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    amazon_file_path = db.Column(
+        db.String,
+        nullable=False
+    )
 
 
 # class Image_Metadata(db.Model):
@@ -58,8 +65,8 @@
 #         nullable=True
 #     )
 
-# def connect_db(app):
-#     """Connect this database to Flask app."""
+def connect_db(app):
+    """Connect this database to Flask app."""
 
-#     db.app = app
-#     db.init_app(app)
+    db.app = app
+    db.init_app(app)
