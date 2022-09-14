@@ -3,10 +3,17 @@
 {% block content %}
 <div class="row">
 
+  <a href="/addimage" class="btn btn-primary btn-lg">Add New Image</a>
 
-  <p>hello</p>
   {% for image in images %}
-  <img src="{{ image.amazon_file_path }}" alt="">
+  <p>
+    Name: {{image.image_name}}, uploaded by: {{image.uploaded_by}}
+    Notes: {{image.notes}}
+  </p>
+  <a href="image/{{ image.id }}">
+    <img src="{{ image.amazon_file_path }}" alt="">
+  </a>
   {% endfor %}
+
 </div>
 {% endblock %}

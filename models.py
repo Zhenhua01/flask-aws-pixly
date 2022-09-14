@@ -1,6 +1,7 @@
 """SQLAlchemy models for Pixly."""
 
 from datetime import datetime
+from unicodedata import name
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -27,11 +28,6 @@ class Image(db.Model):
         nullable=False
     )
 
-    file_name = db.Column(
-        db.String,
-        nullable=False
-    )
-
     notes = db.Column(
         db.String
     )
@@ -48,22 +44,37 @@ class Image(db.Model):
     )
 
 
-# class Image_Metadata(db.Model):
-#     """Table for images metadata."""
+class Image_Metadata(db.Model):
+    """Table for images metadata."""
 
-#     __tablename__ = 'metadata'
+    __tablename__ = 'metadata'
 
-#     image_id = db.Column(
-#         db.Integer,
-#         db.ForeignKey('images.id'),
-#         primary_key=True,
-#     )
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
 
-#     exif = db.Column(
-#         db.JSONType,
-#         default={},
-#         nullable=True
-#     )
+    image_id = db.Column(
+        db.Integer,
+        db.ForeignKey('images.id'),
+        nullable=False
+    )
+
+    name = db.Column(
+        db.String(50),
+        nullable=False
+    )
+
+    value = db.Column(
+        db.String(50),
+        nullable=False
+    )
+
+    # exif_data = db.Column(
+    #     db.JSON,
+    #     nullable=True
+    # )
 
 def connect_db(app):
     """Connect this database to Flask app."""

@@ -1,16 +1,19 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, request, flash, redirect
+from flask import Flask, render_template, flash, redirect, json
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
-from models import db, connect_db, Image
+from models import Image, Image_Metadata, db, connect_db
 from forms import AddImageForm
 from botocore.exceptions import ClientError
 
+
 import boto3
-from PIL import Image as pillow
+from PIL import ExifTags, Image as PilImage
+from PIL.ExifTags import TAGS
+
 
 load_dotenv()
 
@@ -46,41 +49,29 @@ BUCKET = os.environ['BUCKET_NAME']
 # individual image page with edit button for options
 # if edit, make copy of photo to backend, commit to db, redirect to home
 
-
-# TODO: editing image, do we replace and reupload?
-# do we send back a presigned url for user to download? send back a link to serve image
+# boto3 client functions/helpers, import .env var
 
 @app.get('/')
 def homepage():
     """Display home page with list of top 20 images."""
     # query db for amazon links (img url)
     images = Image.query.all()
-    # try:
-    # response = s3.generate_presigned_url(
-    #     'get_object',
-    #     Params={'Bucket': "pixly-bucket",
-    #             'Key': "samplecat.jpg"},
-    #     ExpiresIn=3600)
-    # print(response)
-    # except ClientError as e:
-    #     # logging.error(e)
-    #     print(e)
-    #     return None
-
-    # The response contains the presigned URL
 
     return render_template('index.html', images=images)
 
 
 @app.route('/addimage', methods=['GET', 'POST'])
-def upload():
+def add_image():
     form = AddImageForm()
 
     if form.validate_on_submit():
         f = form.photo.data
         filename = secure_filename(f.filename)
         f.save(os.path.join(filename))
-        s3.upload_file(filename, BUCKET, filename)
+        with open(filename, "rb") as photo:
+            s3.upload_fileobj(photo, BUCKET, filename)
+
+        # delete image form app or use uploadfileobj
 
         # insert image data to images table
         image_name = form.image_name.data
@@ -89,18 +80,53 @@ def upload():
 
         image = Image(
             image_name=image_name,
-            file_name=filename,
             uploaded_by=uploaded_by,
             notes=notes,
             amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
         )
-
-        # insert image metadata to Image_Metadata table
-        image = Image.open(f)
-
         db.session.add(image)
         db.session.commit()
+
+        # insert image metadata to Image_Metadata table
+        img = PilImage.open(f)
+        img_metadata = img.getexif()
+        exif_data = {}
+
+        for tag_id in img_metadata:
+            tag = TAGS.get(tag_id, tag_id)
+            data = img_metadata.get(tag_id)
+            # decode data from bytes
+            if isinstance(data, bytes):
+                data = data.decode()
+
+            print("data", type(data))
+            exif_data[tag] = data
+
+        # print("exif_data", exif_data)
+
+        # for tag in exif_data:
+        #     metadata = Image_Metadata(
+        #         image_id = image.id,
+        #         name = tag,
+        #         value = exif_data[tag]
+        #     )
+        #     db.session.add(metadata)
+        # db.session.commit()
 
         return redirect("/")
 
     return render_template('add_image.html', form=form)
+
+
+@app.route('/image/<int:id>', methods=['GET'])
+def show_image(id):
+    image = Image.query.get_or_404(id)
+
+    return render_template('image.html', image=image)
+
+
+@app.route('/image/<int:id>/edit', methods=['GET', 'POST'])
+def edit_image(id):
+
+
+    return render_template('image.html')
