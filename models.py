@@ -1,65 +1,65 @@
-"""SQLAlchemy models for Warbler."""
+# """SQLAlchemy models for Pixly."""
 
-from contextlib import nullcontext
-from datetime import datetime
+# from datetime import datetime
+# from flask_sqlalchemy import SQLAlchemy
 
-from flask_sqlalchemy import SQLAlchemy
+# db = SQLAlchemy()
 
-db = SQLAlchemy()
+# class Image(db.Model):
+#     """Table for images."""
 
-# DEFAULT_IMAGE_URL = "/static/images/default-pic.png"
-# DEFAULT_HEADER_IMAGE_URL = "/static/images/warbler-hero.jpg"
+#     __tablename__ = 'images'
 
-class Image(db.Model):
-    """Connection of a follower <-> followed_user."""
+#     id = db.Column(
+#         db.Integer,
+#         primary_key=True,
+#         autoincrement=True
+#     )
 
-    __tablename__ = 'images'
+#     image_name = db.Column(
+#         db.String(50),
+#         nullable=False
+#     )
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-        autoincrement=True
-    )
+#     file_name = db.Column(
+#         db.String,
+#         nullable=False
+#     )
 
-    image_name = db.Column(
-        db.String(50),
-        nullable=False
-    )
+#     notes = db.Column(
+#         db.String
+#     )
 
-    file_name = db.Column(
-        db.String,
-        nullable=False
-    )
+#     upload_date = db.Column(
+#         datetime,
+#         nullable=False
+#     )
 
-    notes = db.Column(
-        db.String
-    )
-
-    upload_date = db.Column(
-        datetime,
-        nullable=False
-    )
-
-    amazon_file_path = db.Column(
-        db.String,
-        nullable=False
-    )
+#     amazon_file_path = db.Column(
+#         db.String,
+#         nullable=False
+#     )
 
 
-class Image_Metadata(db.Model):
-    """Connection of a follower <-> followed_user."""
+# class Image_Metadata(db.Model):
+#     """Table for images metadata."""
 
-    __tablename__ = 'metadata'
+#     __tablename__ = 'metadata'
 
-    image_id = db.Column(
-        db.Integer,
-        db.ForeignKey('images.id'),
-        primary_key=True,
-    )
+#     image_id = db.Column(
+#         db.Integer,
+#         db.ForeignKey('images.id'),
+#         primary_key=True,
+#     )
 
-    exif = db.Column(
-        db.JSONType,
-        default={},
-        nullable=True
-    )
+#     exif = db.Column(
+#         db.JSONType,
+#         default={},
+#         nullable=True
+#     )
 
+# def connect_db(app):
+#     """Connect this database to Flask app."""
+
+#     db.app = app
+#     db.init_app(app)
