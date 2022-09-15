@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block body_class %}{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-md-center">
+  <div class="col-md-7 col-lg-5">
+    <img src="/static/images/edit.JPG" alt="">
+    <p>Image Size: {{ size[0] }} * {{ size[1] }}</p>
+    <form method="POST" enctype="multipart/form-data" id="add_image_form">
+      {{ form.hidden_tag() }}
+
+      {% for field in form
+      if field.widget.input_type != 'hidden' %}
+      {% for error in field.errors %}
+      <span class="text-danger">{{ error }}</span>
+      {% endfor %}
+      <label>{{ field.label }}</label>
+      {{ field(class="form-control") }}
+      {% endfor %}
+
+      <button class="btn btn-primary btn-lg">Preview changes</button>
+    </form>
+    <a href="/uploadedit">Save & upload</a>
+  </div>
+</div>
+
+
+{% endblock %}

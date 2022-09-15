@@ -3,6 +3,6 @@
 {% block content %}
 <div class="row">
   <img src="{{ image.amazon_file_path }}" alt="">
-  <button class="btn btn-primary btn-lg">Edit Image</button>
+  <a href="/image/{{image.id}}/edit" class="btn btn-primary btn-lg">Edit Image</a>
 </div>
 {% endblock %}
