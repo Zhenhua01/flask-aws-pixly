@@ -5,10 +5,24 @@
 
   <h1>Discount Instagram</h1>
   <a href="/addimage" class="btn btn-primary btn-lg">Add New Image</a>
+  <form class="navbar-form navbar-end" action="/">
+    <input name="search"
+      class="form-control"
+      placeholder="Search for an image"
+      aria-label="Search">
+    <button class="btn btn-primary btn-lg">Search</button>
+  </form>
+
+  <h3>Use the search bar to find more photos!</h3>
+  {% if search %}
+      <h4><i>Displaying results for '{{search}}':</i></h4>
+  {% endif %}
 
   {% for image in images %}
   <p>
-    Name: {{image.image_name}}, uploaded by: {{image.uploaded_by}}
+    Name: {{image.image_name}},
+    uploaded by: {{image.uploaded_by}},
+    uploaded on {{image.upload_date.strftime('%Y-%m-%d')}}
     Notes: {{image.notes}}
   </p>
   <a href="image/{{ image.id }}">

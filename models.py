@@ -1,8 +1,16 @@
 """SQLAlchemy models for Pixly."""
 
 from datetime import datetime
+from fileinput import filename
 from unicodedata import name
 from flask_sqlalchemy import SQLAlchemy
+
+import sqlalchemy as sa
+from sqlalchemy import desc, Index
+from sqlalchemy.dialects.postgresql import TSVECTOR
+class TSVector(sa.types.TypeDecorator):
+    impl = TSVECTOR
+
 
 db = SQLAlchemy()
 
@@ -28,6 +36,12 @@ class Image(db.Model):
         nullable=False
     )
 
+    filename = db.Column(
+        db.String(50),
+        nullable=False,
+        # unique=True,
+    )
+
     notes = db.Column(
         db.String
     )
@@ -42,6 +56,12 @@ class Image(db.Model):
         db.String,
         nullable=False
     )
+
+    __ts_vector__ = db.Column(TSVector(),db.Computed(
+         "to_tsvector('english', image_name || ' ' || notes || ' ' || uploaded_by)",
+         persisted=True))
+    __table_args__ = (Index('ix_image___ts_vector__',
+          __ts_vector__, postgresql_using='gin'),)
 
 
 class Image_Metadata(db.Model):
@@ -70,6 +90,12 @@ class Image_Metadata(db.Model):
         db.String(50),
         nullable=False
     )
+
+    __ts_vector__ = db.Column(TSVector(),db.Computed(
+         "to_tsvector('english', name || ' ' || value)",
+         persisted=True))
+    __table_args__ = (Index('ix_metadata___ts_vector__',
+          __ts_vector__, postgresql_using='gin'),)
 
     # exif_data = db.Column(
     #     db.JSON,

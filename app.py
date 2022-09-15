@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, flash, redirect, json
+from flask import Flask, render_template, flash, redirect, request
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
@@ -12,7 +12,7 @@ from botocore.exceptions import ClientError
 import requests
 import boto3
 from io import BytesIO
-from PIL import ExifTags, Image as PilImage, ImageFilter
+from PIL import Image as PilImage, ImageFilter, TiffImagePlugin
 from PIL.ExifTags import TAGS
 
 
@@ -50,16 +50,37 @@ BUCKET = os.environ['BUCKET_NAME']
 # individual image page with edit button for options
 # if edit, make copy of photo to backend, commit to db, redirect to home
 
-# boto3 client functions/helpers, import .env var
+# //TODO: boto3 client functions/helpers, import .env var
 
 
 @app.get('/')
 def homepage():
-    """Display home page with list of top 20 images."""
-    # query db for amazon links (img url)
-    images = Image.query.all()
+    """Display home page with list of top 10 images or display search results."""
 
-    return render_template('index.html', images=images)
+    search = request.args.get('search') and request.args.get('search').lower()
+    if not search:
+        images = Image.query.limit(10).all()
+    else:
+        id_list = []
+
+        metadata_search = Image_Metadata.query.filter(
+            Image_Metadata.__ts_vector__.match(search)).all()
+
+        for metadata in metadata_search:
+            id_list.append(metadata.image_id)
+
+        image_search = Image.query.filter(
+            Image.__ts_vector__.match(search)).all()
+
+        for image in image_search:
+            id_list.append(image.id)
+
+        unique_ids = set(id_list)
+
+        images = Image.query.filter(Image.id.in_(unique_ids)).all()
+
+
+    return render_template('index.html', images=images, search=search)
 
 
 @app.route('/addimage', methods=['GET', 'POST'])
@@ -86,6 +107,7 @@ def add_image():
             image_name=image_name,
             uploaded_by=uploaded_by,
             notes=notes,
+            filename=filename,
             amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
         )
         db.session.add(image)
@@ -96,26 +118,23 @@ def add_image():
         img_metadata = img.getexif()
         exif_data = {}
 
-        for tag_id in img_metadata:
-            tag = TAGS.get(tag_id, tag_id)
-            data = img_metadata.get(tag_id)
-            # decode data from bytes
-            if isinstance(data, bytes):
-                data = data.decode()
+        for tag, data in img_metadata.items():
+            if tag in TAGS:
+                if isinstance(data, TiffImagePlugin.IFDRational):
+                    data = float(data)
+                elif isinstance(data, bytes):
+                    data = data.decode(errors="replace")
 
-            print("data", type(data))
-            exif_data[tag] = data
+                exif_data[TAGS[tag]] = data
 
-        # print("exif_data", exif_data)
-
-        # for tag in exif_data:
-        #     metadata = Image_Metadata(
-        #         image_id = image.id,
-        #         name = tag,
-        #         value = exif_data[tag]
-        #     )
-        #     db.session.add(metadata)
-        # db.session.commit()
+        for tag in exif_data:
+            metadata = Image_Metadata(
+                image_id = image.id,
+                name = tag,
+                value = exif_data[tag]
+            )
+            db.session.add(metadata)
+        db.session.commit()
 
         return redirect("/")
 
@@ -177,7 +196,7 @@ def upload_edit_image():
     if form.validate_on_submit():
         filename = form.file_name.data
         with open(os.path.join("static/images/edit.JPG"), 'rb') as photo:
-            # print(type(photo))
+
             s3.upload_fileobj(photo, BUCKET, filename)
 
         # delete image form app or use uploadfileobj
@@ -191,6 +210,7 @@ def upload_edit_image():
             image_name=image_name,
             uploaded_by=uploaded_by,
             notes=notes,
+            filename=filename,
             amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
         )
 

@@ -2,6 +2,12 @@
 
 {% block content %}
 <div class="row">
+  <p>
+    Name: {{image.image_name}},
+    uploaded by: {{image.uploaded_by}},
+    uploaded on {{image.upload_date.strftime('%Y-%m-%d')}}
+    Notes: {{image.notes}}
+  </p>
   <img src="{{ image.amazon_file_path }}" alt="">
   <a href="/image/{{image.id}}/edit" class="btn btn-primary btn-lg">Edit Image</a>
 </div>
