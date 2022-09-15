@@ -85,6 +85,7 @@ def homepage():
 
 @app.route('/addimage', methods=['GET', 'POST'])
 def add_image():
+    """ Get: Renders add_image html """
     form = AddImageForm()
 
     if form.validate_on_submit():
@@ -112,6 +113,8 @@ def add_image():
         )
         db.session.add(image)
         db.session.commit()
+
+        os.remove(filename)
 
         # insert image metadata to Image_Metadata table
         img = PilImage.open(f)
@@ -159,14 +162,12 @@ def edit_image(id):
     response = requests.get(filename)
     img = PilImage.open(BytesIO(response.content))
     img.save("static/images/edit.JPG")
+
     size = img.size
+
     if form.validate_on_submit():
 
-        print("formData", form.black_and_white.data)
-        print("img is", img)
-        print("edge-detect", form.edge_detection.data)
         if form.black_and_white.data == True:
-            print("did something here 2")
             img = img.convert('L')
         if "Smooth" in form.edge_detection.data:
             img = img.convert('L')
@@ -176,16 +177,23 @@ def edit_image(id):
         if "Enhance" in form.edge_detection.data:
             img = img.filter(ImageFilter.EDGE_ENHANCE)
         if form.reduce.data > 0:
-            print("reduce by", form.reduce.data)
             img = img.reduce(form.reduce.data)
-        size = img.size
+
         img.save("static/images/edit.JPG")
-        return render_template('edit_image.html', image=image, size=size, form=form)
-        # img.show() it works
-        # img.save to is edit
-        # redirect with new img
+        return redirect(f"/image/{id}/edit/preview")
 
     return render_template('edit_image.html', image=image, size=size, form=form)
+
+
+@app.get('/image/<int:id>/edit/preview')
+def preview_edit(id):
+
+    img = PilImage.open("static/images/edit.JPG")
+
+    size = img.size
+
+    return render_template('preview_edit.html', id=id, size=size)
+
 
 
 @app.route('/uploadedit', methods=['GET', 'POST'])
@@ -199,9 +207,6 @@ def upload_edit_image():
 
             s3.upload_fileobj(photo, BUCKET, filename)
 
-        # delete image form app or use uploadfileobj
-
-        # insert image data to images table
         image_name = form.image_name.data
         uploaded_by = form.uploaded_by.data
         notes = form.notes.data
@@ -216,6 +221,8 @@ def upload_edit_image():
 
         db.session.add(image)
         db.session.commit()
+
+        os.remove("static/images/edit.jpg")
 
         return redirect(f'/image/{image.id}')
 
