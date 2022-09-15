@@ -1,34 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
+<div class="container">
 
-  <h1>Discount Instagram</h1>
-  <a href="/addimage" class="btn btn-primary btn-lg">Add New Image</a>
+  <!-- <a href="/addimage" class="btn btn-primary btn-lg">Add New Image</a>
   <form class="navbar-form navbar-end" action="/">
     <input name="search"
       class="form-control"
       placeholder="Search for an image"
       aria-label="Search">
     <button class="btn btn-primary btn-lg">Search</button>
-  </form>
+  </form> -->
 
-  <h3>Use the search bar to find more photos!</h3>
   {% if search %}
-      <h4><i>Displaying results for '{{search}}':</i></h4>
+  <h4><i>Displaying results for '{{search}}':</i></h4>
   {% endif %}
-
-  {% for image in images %}
-  <p>
-    Name: {{image.image_name}},
-    uploaded by: {{image.uploaded_by}},
-    uploaded on {{image.upload_date.strftime('%Y-%m-%d')}}
-    Notes: {{image.notes}}
-  </p>
-  <a href="image/{{ image.id }}">
-    <img src="{{ image.amazon_file_path }}" alt="">
-  </a>
-  {% endfor %}
+  <div class="d-flex flex-wrap justify-content-evenly row">
+    {% for image in images %}
+    <div class="col-4 d-flex align-items-center flex-column mt-5">
+      <p>
+        Name: {{image.image_name}}
+      </p>
+      <p>
+        Uploaded by: {{image.uploaded_by}}
+      </p>
+      <a href="image/{{ image.id }}">
+        <img class="thumbnail" src="{{ image.amazon_file_path }}" alt="">
+      </a>
+    </div>
+    {% endfor %}
+  </div>
 
 </div>
 {% endblock %}

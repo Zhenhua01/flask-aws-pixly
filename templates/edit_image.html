@@ -20,9 +20,11 @@
       {{ field(class="form-control") }}
       {% endfor %}
 
-      <button class="btn btn-primary btn-lg">Preview changes</button>
+      <div class="d-flex justify-content-evenly mt-3">
+        <button class="btn btn-info btn-lg">Preview changes</button>
+        <button class="btn btn-primary btn-lg" formaction="/uploadedit" formmethod="get">Save & Upload</button>
+      </div>
     </form>
-    <a href="/uploadedit">Save & upload</a>
   </div>
 </div>
 

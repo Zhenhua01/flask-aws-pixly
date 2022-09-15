@@ -6,18 +6,49 @@
   <title>Pixly!</title>
 
   <link rel="stylesheet" href="https://unpkg.com/bootstrap@5/dist/css/bootstrap.css">
-  <script src="https://unpkg.com/jquery"></script>
-  <script src="https://unpkg.com/popper"></script>
   <script src="https://unpkg.com/bootstrap"></script>
 
   <link rel="stylesheet" href="https://www.unpkg.com/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/static/stylesheets/bootstrap.min.css">
   <link rel="stylesheet" href="/static/stylesheets/style.css">
+
 
 </head>
 <!-- add navbar with home button -->
 
-<body class="{% block body_class %}{% endblock %}">
-  <a class="btn btn-primary btn-lg" href="/">DI</a>
+<body class="container">
+  <!-- <a class="btn btn-primary btn-lg" href="/">DI</a> -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+
+      <div class="navbar-header">
+        <a href="/" class="navbar-brand">
+          <span>Discount IG</span>
+        </a>
+      </div>
+
+
+
+      <div class="navbar navbar-nav">
+        <div class="nav-link">
+          <a href="/addimage" class="nav-link">
+            <span>Add Image</span>
+          </a>
+        </div>
+
+        <div>
+          <form class="d-flex navbar-form navbar-end" action="/">
+            <input name="search" class="form-control" placeholder="search images" aria-label="Search">
+            <button class="btn btn-primary btn-sm">Search</button>
+          </form>
+        </div>
+
+      </div>
+
+
+      </ul>
+    </div>
+  </nav>
   {% block content %}
   {% endblock %}
 

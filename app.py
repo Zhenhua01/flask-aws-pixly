@@ -12,8 +12,9 @@ from botocore.exceptions import ClientError
 import requests
 import boto3
 from io import BytesIO
-from PIL import Image as PilImage, ImageFilter, TiffImagePlugin
+from PIL import Image as PilImage, ImageFilter, TiffImagePlugin, ImageOps
 from PIL.ExifTags import TAGS
+from helpers import sepia, custom_colors
 
 
 load_dotenv()
@@ -79,7 +80,6 @@ def homepage():
 
         images = Image.query.filter(Image.id.in_(unique_ids)).all()
 
-
     return render_template('index.html', images=images, search=search)
 
 
@@ -132,9 +132,9 @@ def add_image():
 
         for tag in exif_data:
             metadata = Image_Metadata(
-                image_id = image.id,
-                name = tag,
-                value = exif_data[tag]
+                image_id=image.id,
+                name=tag,
+                value=exif_data[tag]
             )
             db.session.add(metadata)
         db.session.commit()
@@ -166,17 +166,25 @@ def edit_image(id):
     size = img.size
 
     if form.validate_on_submit():
+        rgb = [form.red.data or 100,
+               form.green.data or 100,
+               form.blue.data or 100]
+        print('rgb is', rgb)
 
-        if form.black_and_white.data == True:
-            img = img.convert('L')
+        img = custom_colors(img, rgb)
+        if form.tone.data == 2:
+            img = sepia(img)
+        if form.tone.data == 3:
+            img = ImageOps.grayscale(img)
+        if form.border.data != "no border":
+            img = ImageOps.expand(img, border=35, fill=form.border.data)
         if "Smooth" in form.edge_detection.data:
-            img = img.convert('L')
             img = img.filter(ImageFilter.SMOOTH)
         if "Edges" in form.edge_detection.data:
             img = img.filter(ImageFilter.FIND_EDGES)
         if "Enhance" in form.edge_detection.data:
             img = img.filter(ImageFilter.EDGE_ENHANCE)
-        if form.reduce.data > 0:
+        if form.reduce.data:
             img = img.reduce(form.reduce.data)
 
         img.save("static/images/edit.JPG")
@@ -193,7 +201,6 @@ def preview_edit(id):
     size = img.size
 
     return render_template('preview_edit.html', id=id, size=size)
-
 
 
 @app.route('/uploadedit', methods=['GET', 'POST'])
@@ -227,3 +234,8 @@ def upload_edit_image():
         return redirect(f'/image/{image.id}')
 
     return render_template('upload_edit.html', form=form)
+
+
+# upload_fileobj so we do not need to write/delete to from app
+# unique filename and error handlers
+# write some tests?

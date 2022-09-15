@@ -9,9 +9,9 @@
     <img src="/static/images/edit.JPG" alt="">
     <p>Image Size: {{ size[0] }} * {{ size[1] }}</p>
     <form enctype="multipart/form-data" action="/uploadedit" id="add_image_form">
+      <button type="submit" formaction="/image/{{id}}/edit" class="btn btn-danger btn-lg">Discard Changes</button>
       <button type="submit" class="btn btn-primary btn-lg">Upload changes</button>
     </form>
-    <a href="/images/{{id}}/edit">Discard Changes</a>
   </div>
 </div>
 

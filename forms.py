@@ -5,8 +5,8 @@ from signal import valid_signals
 from typing import Optional
 from wsgiref.validate import validator
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectMultipleField, RadioField, SelectField
-from wtforms.validators import DataRequired, Email, Length, Optional
+from wtforms import StringField, TextAreaField, SelectMultipleField, RadioField, SelectField, IntegerField
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
@@ -29,9 +29,24 @@ class AddImageForm(FlaskForm):
 class EditImageForm(FlaskForm):
     """ Form for editing image. """
 
-    black_and_white = RadioField(
-        'Black & White',
-        choices=[(True, "yes"), (False, '')], coerce=bool)
+    tone = SelectField(
+        'Tone',
+        choices=[
+            (1, "Default"),
+            (2, "Sepia"),
+            (3, "Black & White")],
+        coerce=int,
+        default=1)
+
+    border = SelectField(
+        'Border',
+        choices=[
+            ("no border", "Default"),
+            ("black", "Black"),
+            ("white", "White"),
+            ("grey", "Grey"),
+            ("brown", "Brown")],
+        default="no border")
 
     edge_detection = SelectMultipleField(
         'Edge Detection (Hold shift to select multiple)',
@@ -41,14 +56,18 @@ class EditImageForm(FlaskForm):
             ("Enhance", "Enhance")
         ])
 
-    reduce = SelectField(
+    reduce = IntegerField(
         'Scale Down by',
-        choices=[
-            (1, "1x"),
-            (2, "2x"),
-            (3, "3x"),
-            (4, "4x"),
-            (5, "5x")], coerce=int)
+        validators=[NumberRange(min=1, max=7), Optional()])
+
+    red = IntegerField('RGB red hue (%)', validators=[
+        NumberRange(min=0, max=100), Optional()])
+
+    green = IntegerField('RGB green hue (%)', validators=[
+        NumberRange(min=0, max=100), Optional()])
+
+    blue = IntegerField('RGB blue hue (%)', validators=[
+        NumberRange(min=0, max=100), Optional()])
 
 
 class EditImageForUploadForm(FlaskForm):

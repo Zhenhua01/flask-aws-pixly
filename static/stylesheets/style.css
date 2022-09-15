@@ -1,3 +1,18 @@
-img {
-    width: 200px;
+.thumbnail {
+    height: 300px;
+    width: auto;
+    max-width: 400px;
+}
+
+.photo-details {
+    height: 500px;
+    width: auto;
+}
+
+.navbar {
+    height: 100px;
+}
+
+.navbar-brand {
+    font-size: 2em;
 }

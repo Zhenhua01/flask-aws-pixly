@@ -5,8 +5,9 @@
 {% block content %}
 
 <div class="row justify-content-md-center">
+  <h2 class="add_image">Upload an Edited Image</h2>
   <div class="col-md-7 col-lg-5">
-    <h2 class="add_image">Upload an Edited Image</h2>
+
     <img src="/static/images/edit.JPG" alt="edited-img">
     <form method="POST" enctype="multipart/form-data" id="add_image_form">
       {{ form.hidden_tag() }}
@@ -20,7 +21,9 @@
       {{ field(class="form-control") }}
       {% endfor %}
 
-      <button class="btn btn-primary btn-lg">Upload!</button>
+      <div class="d-flex justify-content-md-center mt-3">
+        <button class="btn btn-success btn-lg">Upload!</button>
+      </div>
     </form>
   </div>
 </div>
