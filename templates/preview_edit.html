@@ -6,11 +6,11 @@
 
 <div class="row justify-content-md-center">
   <div class="col-md-7 col-lg-5">
-    <img src="/static/images/edit.JPG" alt="">
+    <img class="photo-details"src="/static/images/edit.JPG" alt="">
     <p>Image Size: {{ size[0] }} * {{ size[1] }}</p>
-    <form enctype="multipart/form-data" action="/uploadedit" id="add_image_form">
+    <form enctype="multipart/form-data" action="/uploadedit" id="preview_image">
       <button type="submit" formaction="/image/{{id}}/edit" class="btn btn-danger btn-lg">Discard Changes</button>
-      <button type="submit" class="btn btn-primary btn-lg">Upload changes</button>
+      <button type="submit" class="btn btn-primary btn-lg">Upload Changes</button>
     </form>
   </div>
 </div>

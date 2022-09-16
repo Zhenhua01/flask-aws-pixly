@@ -12,12 +12,10 @@
   <link rel="stylesheet" href="/static/stylesheets/bootstrap.min.css">
   <link rel="stylesheet" href="/static/stylesheets/style.css">
 
-
 </head>
-<!-- add navbar with home button -->
 
 <body class="container">
-  <!-- <a class="btn btn-primary btn-lg" href="/">DI</a> -->
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
 
@@ -27,12 +25,10 @@
         </a>
       </div>
 
-
-
       <div class="navbar navbar-nav">
         <div class="nav-link">
           <a href="/addimage" class="nav-link">
-            <span>Add Image</span>
+            <b>Add New Image</b>
           </a>
         </div>
 
@@ -45,10 +41,14 @@
 
       </div>
 
-
       </ul>
     </div>
   </nav>
+
+  {% for category, message in get_flashed_messages(with_categories=True) %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+
   {% block content %}
   {% endblock %}
 

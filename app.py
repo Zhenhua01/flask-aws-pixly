@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 
 from flask import Flask, render_template, flash, redirect, request
 from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from models import Image, Image_Metadata, db, connect_db
 from forms import AddImageForm, EditImageForm, EditImageForUploadForm
+from sqlalchemy.exc import IntegrityError
 from botocore.exceptions import ClientError
 
 import requests
@@ -28,7 +28,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -43,15 +43,6 @@ s3 = boto3.client(
     aws_secret_access_key=os.environ['SECRET_ACCESS_KEY']
 )
 BUCKET = os.environ['BUCKET_NAME']
-
-# home/index page shows collection of all photos with search and add button
-# if search term, re-render home page route with query string
-
-# add image form page
-# individual image page with edit button for options
-# if edit, make copy of photo to backend, commit to db, redirect to home
-
-# //TODO: boto3 client functions/helpers, import .env var
 
 
 @app.get('/')
@@ -85,7 +76,10 @@ def homepage():
 
 @app.route('/addimage', methods=['GET', 'POST'])
 def add_image():
-    """ Get: Renders add_image html """
+    """ Get: Renders form to add a new image, add_image html.
+        Post: Saves form data to database, uploads image to S3,
+        and redirects to image details page. """
+
     form = AddImageForm()
 
     if form.validate_on_submit():
@@ -94,10 +88,11 @@ def add_image():
         filename = secure_filename(f.filename)
         f.save(os.path.join(filename))
         with open(filename, 'rb') as photo:
-            # print(type(photo))
-            s3.upload_fileobj(photo, BUCKET, filename)
-
-        # delete image form app or use uploadfileobj
+            try:
+                s3.upload_fileobj(photo, BUCKET, filename)
+            except ClientError:
+                flash("Image upload was not successful", 'danger')
+                return redirect('/addimage')
 
         # insert image data to images table
         image_name = form.image_name.data
@@ -111,10 +106,13 @@ def add_image():
             filename=filename,
             amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
         )
-        db.session.add(image)
-        db.session.commit()
-
-        os.remove(filename)
+        try:
+            db.session.add(image)
+            db.session.commit()
+            os.remove(filename)
+        except IntegrityError:
+            flash("Filename already exists, please rename the image.", 'danger')
+            return redirect('/addimage')
 
         # insert image metadata to Image_Metadata table
         img = PilImage.open(f)
@@ -137,28 +135,44 @@ def add_image():
                 value=exif_data[tag]
             )
             db.session.add(metadata)
-        db.session.commit()
 
-        return redirect("/")
+        try:
+            db.session.commit()
+        except IntegrityError:
+            flash("Image EXIF data could not be saved.", 'danger')
+
+        flash("Image successfully uploaded!", 'success')
+        return redirect(f"/image/{image.id}")
 
     return render_template('add_image.html', form=form)
 
 
-@app.route('/image/<int:id>', methods=['GET'])
+@app.get('/image/<int:id>')
 def show_image(id):
-    image = Image.query.get_or_404(id)
+    """ Get: Renders image detail page, image.html"""
 
-    return render_template('image.html', image=image)
+    try:
+        image = Image.query.get_or_404(id)
+        return render_template('image.html', image=image)
+    except:
+        flash("Image ID not found.", 'danger')
+        return redirect('/')
 
 
 @app.route('/image/<int:id>/edit', methods=['GET', 'POST'])
 def edit_image(id):
-    image = Image.query.get_or_404(id)
+    """ Get: Renders form to select image edits, edit_image.html.
+        Post: Process image edits and displays preview page."""
+
+    try:
+        image = Image.query.get_or_404(id)
+    except:
+        flash("Image ID not found.", 'danger')
+        return redirect('/')
 
     form = EditImageForm()
 
     filename = image.amazon_file_path
-    print('refreshing here')
     response = requests.get(filename)
     img = PilImage.open(BytesIO(response.content))
     img.save("static/images/edit.JPG")
@@ -188,6 +202,7 @@ def edit_image(id):
             img = img.reduce(form.reduce.data)
 
         img.save("static/images/edit.JPG")
+        flash("Image edits applied", 'info')
         return redirect(f"/image/{id}/edit/preview")
 
     return render_template('edit_image.html', image=image, size=size, form=form)
@@ -195,9 +210,15 @@ def edit_image(id):
 
 @app.get('/image/<int:id>/edit/preview')
 def preview_edit(id):
+    """ Get: Renders preview page of edited image, preivew_edit.html. """
+
+    try:
+        image = Image.query.get_or_404(id)
+    except:
+        flash("Image ID not found.", 'danger')
+        return redirect('/')
 
     img = PilImage.open("static/images/edit.JPG")
-
     size = img.size
 
     return render_template('preview_edit.html', id=id, size=size)
@@ -205,14 +226,20 @@ def preview_edit(id):
 
 @app.route('/uploadedit', methods=['GET', 'POST'])
 def upload_edit_image():
+    """ Get: Renders form to upload an edited image.
+        Post: Saves form data to database, uploads image to S3,
+        and redirects to image details page. """
 
     form = EditImageForUploadForm()
 
     if form.validate_on_submit():
         filename = form.file_name.data
         with open(os.path.join("static/images/edit.JPG"), 'rb') as photo:
-
-            s3.upload_fileobj(photo, BUCKET, filename)
+                try:
+                    s3.upload_fileobj(photo, BUCKET, filename)
+                except ClientError:
+                    flash("Image upload was not successful", 'danger')
+                    return redirect('/addimage')
 
         image_name = form.image_name.data
         uploaded_by = form.uploaded_by.data
@@ -226,16 +253,26 @@ def upload_edit_image():
             amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
         )
 
-        db.session.add(image)
-        db.session.commit()
+        try:
+            db.session.add(image)
+            db.session.commit()
+            os.remove("static/images/edit.jpg")
+        except IntegrityError:
+            flash("Filename already exists, please choose a different name.", 'danger')
+            return redirect('/uploadedit')
 
-        os.remove("static/images/edit.jpg")
-
+        flash("Image successfully uploaded!", 'success')
         return redirect(f'/image/{image.id}')
 
     return render_template('upload_edit.html', form=form)
 
 
+@app.route('/<string:path>')
+def catch_all(path):
+    """Function to catch all invalid routes and redirect to home page. """
+
+    flash("Invalid URL route.", 'warning')
+    return redirect('/')
+
 # upload_fileobj so we do not need to write/delete to from app
-# unique filename and error handlers
 # write some tests?

@@ -1,8 +1,6 @@
 """SQLAlchemy models for Pixly."""
 
 from datetime import datetime
-from fileinput import filename
-from unicodedata import name
 from flask_sqlalchemy import SQLAlchemy
 
 import sqlalchemy as sa
@@ -39,7 +37,7 @@ class Image(db.Model):
     filename = db.Column(
         db.String(50),
         nullable=False,
-        # unique=True,
+        unique=True,
     )
 
     notes = db.Column(
