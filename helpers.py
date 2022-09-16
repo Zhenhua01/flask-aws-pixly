@@ -44,9 +44,9 @@ def custom_colors(img, rgb):
         for px in range(width):
             r, g, b = img.getpixel((px, py))
 
-            tr = int(red_tint * r)
-            tg = int(green_tint * g)
-            tb = int(blue_tint * b)
+            tr = int((1+red_tint) * r)
+            tg = int((1+green_tint) * g)
+            tb = int((1+blue_tint) * b)
 
             if tr > 255:
                 tr = 255

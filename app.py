@@ -180,9 +180,9 @@ def edit_image(id):
     size = img.size
 
     if form.validate_on_submit():
-        rgb = [form.red.data or 100,
-               form.green.data or 100,
-               form.blue.data or 100]
+        rgb = [form.red.data or 0,
+               form.green.data or 0,
+               form.blue.data or 0]
         print('rgb is', rgb)
 
         img = custom_colors(img, rgb)
