@@ -4,6 +4,7 @@
 #
 #    python -m unittest test_image_metadata_model.py
 
+
 from sqlalchemy.exc import IntegrityError
 from models import db, Image, Image_Metadata
 from unittest import TestCase
@@ -19,8 +20,8 @@ import os
 os.environ['DATABASE_URL'] = "postgresql:///pixly_test"
 
 # Now we can import app
-from app import app
 
+# TODO: from app import app
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data

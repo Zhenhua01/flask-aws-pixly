@@ -277,14 +277,14 @@ def catch_all(path):
     return redirect('/')
 
 
-
 # Lightning round:
 
 # experience:
-#   - rediscovering flask & reading thru all 1000 pages of aws docs(static bucket), read thru pillow docs
 #   - considering user interaction with site changed how we approached redirects and routing
 #   - coming back to server-side rendering, react would've made app more dynamic(redirects)
 #   - client side render > server side, seemed clunky
+
+#   - rediscovering flask & reading thru all 1000 pages of aws docs(static bucket), read thru pillow docs
 #   - opened eyes on how much we can deliver in a timeframe, too ambitious with react(not a single test)
 
 # features:
@@ -307,3 +307,12 @@ def catch_all(path):
 
 # PSQL DB:
 # - select id, title, description, published_at FROM video WHERE to_tsvector(title || ' ' || description) @@ to_tsquery(term)
+
+
+# talking points:
+#   - (zhen)intro: introduce us and the app that we built(Discount IG), description: app for uploading, sharing, editing photos
+#   - (jordan)walk thru app(home, features for search, add, edit, reupload)
+#   - (zhen)bugs, psql topics
+#   - (jordan)potential improvements, if had more time...
+#        edited/downloaded&reuploaded photos do not have exif data to query by, unsure about how we want
+#   - both talk about experience
