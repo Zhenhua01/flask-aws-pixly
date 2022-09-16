@@ -1,8 +1,8 @@
-"""Image model tests."""
+"""Image_Metadata model tests."""
 
 # run these tests like:
 #
-#    python -m unittest test_image_model.py
+#    python -m unittest test_image_metadata_model.py
 
 from sqlalchemy.exc import IntegrityError
 from models import db, Image, Image_Metadata
@@ -29,7 +29,7 @@ from app import app
 db.create_all()
 
 
-class ImageModelTestCase(TestCase):
+class ImageMetadataModelTestCase(TestCase):
     def setUp(self):
         Image_Metadata.query.delete()
         Image.query.delete()
@@ -39,13 +39,24 @@ class ImageModelTestCase(TestCase):
             uploaded_by="test_user",
             notes="notes",
             filename="testfile.jpg",
-            amazon_file_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
+            amazon_file_path="http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
         )
 
         db.session.add(image)
         db.session.commit()
 
         self.image_id = image.id
+
+        image_metadata = Image_Metadata(
+            image_id=image.id,
+            name="resolution",
+            value="high quality",
+        )
+
+        db.session.add(image_metadata)
+        db.session.commit()
+
+        self.image_metadata_id = image_metadata.id
 
         self.client = app.test_client()
 
@@ -55,21 +66,21 @@ class ImageModelTestCase(TestCase):
     def test_image_model(self):
         """test if image is created successfully"""
 
-        img1 = Image.query.get(self.image_id)
+        metadata1 = Image_Metadata.query.get(self.image_metadata_id)
 
-        self.assertEqual(img1.filename, 'testfile.jpg')
-        self.assertEqual(img1.notes, 'notes')
+        self.assertEqual(metadata1.image_id, self.image_id)
+        self.assertEqual(metadata1.name, 'resolution')
+        self.assertEqual(metadata1.value, "high quality")
 
     def test_empty_text(self):
         """ test image model error for empty image string"""
 
-        new_img = Image(
-            image_name=None,
-            uploaded_by="test_user",
-            notes="notes",
-            filename="testfile.jpg",
-            amazon_file_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
+        new_metadata = Image_Metadata(
+            image_id=self.image_id,
+            name="resolution",
+            value=None,
         )
-        db.session.add(new_img)
+
+        db.session.add(new_metadata)
 
         self.assertRaises(IntegrityError, db.session.commit)

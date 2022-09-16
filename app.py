@@ -277,8 +277,8 @@ def catch_all(path):
     return redirect('/')
 
 
-# upload_fileobj so we do not need to write/delete to from app
-# write some tests?
+
+# Lightning round:
 
 # experience:
 #   - rediscovering flask & reading thru all 1000 pages of aws docs(static bucket), read thru pillow docs
@@ -304,3 +304,6 @@ def catch_all(path):
 #   - full text search is not fully functional
 #   - could potentially add users/auth | tags for photos and new db table relations
 #   - more features like adding photos, albums
+
+# PSQL DB:
+# - select id, title, description, published_at FROM video WHERE to_tsvector(title || ' ' || description) @@ to_tsquery(term)
