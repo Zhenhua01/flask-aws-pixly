@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-md-center">
+  <div class="col-md-7 col-lg-5 d-flex flex-column">
+    <img class="photo-details" src="{{ image.s3_url_path }}" alt="">
+    <form method="POST" enctype="multipart/form-data" id="delete_image_form">
+      {{ form.hidden_tag() }}
+
+      {% for field in form
+      if field.widget.input_type != 'hidden' %}
+      {% for error in field.errors %}
+      <span class="text-danger">{{ error }}</span>
+      {% endfor %}
+      <label>{{ field.label }}</label>
+      {{ field(class="form-control") }}
+      {% endfor %}
+
+      <div class="d-flex justify-content-evenly mt-3">
+        <button class="btn btn-danger btn-lg">Confirm Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{% endblock %}

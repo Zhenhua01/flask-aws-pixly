@@ -7,7 +7,6 @@
 
 import os
 from unittest import TestCase
-
 from models import db, Image, Image_Metadata
 
 # BEFORE we import our app, let's set an environmental variable
@@ -27,7 +26,7 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 # and create fresh new clean test data
 db.create_all()
 
-# Don't have WTForms use CSRF at all, since it's a pain to test
+# Turn off CSRF for testing only
 app.config['WTF_CSRF_ENABLED'] = False
 
 

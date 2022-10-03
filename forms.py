@@ -1,15 +1,17 @@
 """WTForms for Pixly."""
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectMultipleField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Length, Optional, NumberRange
 from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import (
+    StringField, TextAreaField, SelectMultipleField,
+    SelectField, IntegerField, PasswordField)
 
 
 class AddImageForm(FlaskForm):
     """ Form for adding images. """
 
-    photo = FileField('Image to upload:', validators=[
+    photo = FileField('JPG Image to upload:', validators=[
         FileRequired(),
         FileAllowed(['jpg'], 'JPG images only!')])
 
@@ -17,7 +19,9 @@ class AddImageForm(FlaskForm):
         DataRequired(),
         Length(max=50)])
 
-    uploaded_by = StringField('Uploaded by:', validators=[DataRequired()])
+    uploaded_by = StringField('Uploaded by:', validators=[
+        DataRequired(),
+        Length(max=50)])
 
     notes = TextAreaField('Notes:')
 
@@ -28,48 +32,51 @@ class EditImageForm(FlaskForm):
     tone = SelectField(
         'Tone',
         choices=[
-            (1, "Original"),
-            (2, "Sepia"),
-            (3, "Black & White")],
-        coerce=int,
-        default=1)
+            ('original', "Original"),
+            ('sepia', "Sepia"),
+            ("black_white", "Black & White")],
+        default="original")
 
     border = SelectField(
-        'Border (color)',
+        'Border Color (30px wide)',
         choices=[
-            ("no border", "No Border"),
+            ("no_border", "No Border"),
             ("black", "Black"),
             ("white", "White"),
             ("grey", "Grey"),
-            ("brown", "Brown")],
-        default="no border")
+            ("red", "Red"),
+            ("green", "Green"),
+            ("blue", "Blue"),
+            ("yellow", "Yellow"),
+            ],
+        default="no_border")
 
     edge_detection = SelectMultipleField(
-        'Edge Detection (Hold shift to select multiple)',
+        'Edge Detection (hold shift to select multiple)',
         choices=[
-            ("Smooth", "Smooth"),
-            ("Edges", 'Edges'),
-            ("Enhance", "Enhance")
+            ("smooth", "Smooth"),
+            ("enhance", "Enhance"),
+            ("edges", 'Edge Outline'),
         ])
 
     reduce = IntegerField(
-        'Scale Down by (1x-10x)',
+        'Scale Resolution Down (1x-10x)',
         validators=[NumberRange(min=1, max=10), Optional()])
 
-    red = IntegerField('Add RGB red tint (%)', validators=[
+    red = IntegerField('Add an overall red tint (%)', validators=[
         NumberRange(min=0, max=100), Optional()])
 
-    green = IntegerField('Add RGB green tint (%)', validators=[
+    green = IntegerField('Add an overall green tint (%)', validators=[
         NumberRange(min=0, max=100), Optional()])
 
-    blue = IntegerField('Add RGB blue tint (%)', validators=[
+    blue = IntegerField('Add an overall blue tint (%)', validators=[
         NumberRange(min=0, max=100), Optional()])
 
 
-class EditImageForUploadForm(FlaskForm):
-    """ Form for adding images. """
+class EditImageUploadForm(FlaskForm):
+    """ Form for adding an edited image. """
 
-    file_name = StringField('File Name:', validators=[
+    filename = StringField('File Name:', validators=[
         DataRequired(),
         Length(max=50)])
 
@@ -81,3 +88,11 @@ class EditImageForUploadForm(FlaskForm):
         DataRequired()])
 
     notes = TextAreaField('Notes:')
+
+
+class DeleteImageForm(FlaskForm):
+    """ Form for code to delete an image. """
+
+    code = PasswordField('Please confirm delete with admin code:', validators=[
+        DataRequired(),
+        Length(max=30)])

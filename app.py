@@ -1,21 +1,19 @@
 import os
+import boto3
 from dotenv import load_dotenv
 
 from flask import Flask, render_template, flash, redirect, request
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.utils import secure_filename
 from models import Image, Image_Metadata, db, connect_db
-from forms import AddImageForm, EditImageForm, EditImageForUploadForm
+from forms import AddImageForm, EditImageForm, EditImageUploadForm, DeleteImageForm
 from sqlalchemy.exc import IntegrityError
 from botocore.exceptions import ClientError
 
-import requests
 import random
-import boto3
-from io import BytesIO
-from PIL import Image as PilImage, ImageFilter, TiffImagePlugin, ImageOps
-from PIL.ExifTags import TAGS
-from helpers import sepia, custom_colors
+from image_processing import (
+    search_images, extract_exif, save_image, image_editor)
+from PIL import Image as PilImage
 
 
 load_dotenv()
@@ -33,45 +31,28 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
-# ACCESS_KEY_ID = os.environ['ACCESS_KEY_ID']
-# SECRET_ACCESS_KEY = os.environ['SECRET_ACCESS_KEY']
-# BUCKET = os.environ['BUCKET_NAME']
+SECRET_DELETE_KEY = os.environ['SECRET_DELETE_KEY']
 
+# boto3 client for image uploading to aws-s3 server
 s3 = boto3.client(
-    "s3",
-    "us-west-1",
-    aws_access_key_id=os.environ['ACCESS_KEY_ID'],
-    aws_secret_access_key=os.environ['SECRET_ACCESS_KEY']
-)
-BUCKET = os.environ['BUCKET_NAME']
+        "s3",
+        "us-west-1",
+        aws_access_key_id = os.environ['ACCESS_KEY_ID'],
+        aws_secret_access_key = os.environ['SECRET_ACCESS_KEY'])
+BUCKET_NAME = os.environ['BUCKET_NAME']
 
 
 @app.get('/')
 def homepage():
-    """Display home page with list of top 10 images or display search results."""
+    """Display home page with list of top 12 images or display search results."""
 
     search = request.args.get('search') and request.args.get('search').lower()
-    if not search:
-        images = Image.query.limit(10).all()
-        random.shuffle(images)
+    if search:
+        images = search_images(search)
     else:
-        id_list = []
+        images = Image.query.limit(12).all()
 
-        metadata_search = Image_Metadata.query.filter(
-            Image_Metadata.__ts_vector__.match(search)).all()
-
-        for metadata in metadata_search:
-            id_list.append(metadata.image_id)
-
-        image_search = Image.query.filter(
-            Image.__ts_vector__.match(search)).all()
-
-        for image in image_search:
-            id_list.append(image.id)
-
-        unique_ids = set(id_list)
-
-        images = Image.query.filter(Image.id.in_(unique_ids)).all()
+    random.shuffle(images)
 
     return render_template('index.html', images=images, search=search)
 
@@ -85,55 +66,52 @@ def add_image():
     form = AddImageForm()
 
     if form.validate_on_submit():
-        f = form.photo.data
-
-        filename = secure_filename(f.filename)
-        f.save(os.path.join(filename))
-        with open(filename, 'rb') as photo:
-            try:
-                s3.upload_fileobj(photo, BUCKET, filename)
-            except ClientError:
-                flash("Image upload was not successful", 'danger')
-                return redirect('/addimage')
-
-        # insert image data to images table
+        photo = form.photo.data
         image_name = form.image_name.data
         uploaded_by = form.uploaded_by.data
         notes = form.notes.data
+        filename = secure_filename(photo.filename)
 
+        result = Image.query.filter_by(filename = filename).first()
+        if result:
+            flash("Filename already exists, please rename the image.", 'danger')
+            return redirect('/addimage')
+
+        # image_data = request.FILES[form.image.name].read()
+
+        # upload photo to aws-s3 server using boto3 client
+        photo.save(os.path.join(filename))
+        with open(filename, 'rb') as img:
+            try:
+                s3.upload_fileobj(img, BUCKET_NAME, filename)
+            except ClientError:
+                flash("Image could not be uploaded to server", 'danger')
+                return redirect('/addimage')
+
+
+        # save form data and aws-s3 url path to database
         image = Image(
             image_name=image_name,
             uploaded_by=uploaded_by,
-            notes=notes,
             filename=filename,
-            amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
+            notes=notes,
+            s3_url_path=f"http://{BUCKET_NAME}.s3.us-west-1.amazonaws.com/{filename}"
         )
+
         try:
             db.session.add(image)
             db.session.commit()
             os.remove(filename)
         except IntegrityError:
-            flash("Filename already exists, please rename the image.", 'danger')
+            flash("Form data could not be saved, please try again.", 'danger')
             return redirect('/addimage')
 
-        # insert image metadata to Image_Metadata table
-        img = PilImage.open(f)
-        img_metadata = img.getexif()
-        exif_data = {}
-
-        for tag, data in img_metadata.items():
-            if tag in TAGS:
-                if isinstance(data, TiffImagePlugin.IFDRational):
-                    data = float(data)
-                elif isinstance(data, bytes):
-                    data = data.decode(errors="replace")
-
-                exif_data[TAGS[tag]] = data
-
+        # get exif_data from photo and save to database
+        exif_data = extract_exif(photo)
         for tag in exif_data:
             metadata = Image_Metadata(
                 image_id=image.id,
-                name=tag,
+                tag=tag,
                 value=exif_data[tag]
             )
             db.session.add(metadata)
@@ -174,40 +152,14 @@ def edit_image(id):
 
     form = EditImageForm()
 
-    filename = image.amazon_file_path
-    response = requests.get(filename)
-    img = PilImage.open(BytesIO(response.content))
-    img.save("static/images/edit.JPG")
-
-    size = img.size
-
     if form.validate_on_submit():
-        rgb = [form.red.data or 0,
-               form.green.data or 0,
-               form.blue.data or 0]
-        print('rgb is', rgb)
 
-        img = custom_colors(img, rgb)
-        if form.tone.data == 2:
-            img = sepia(img)
-        if form.tone.data == 3:
-            img = ImageOps.grayscale(img)
-        if form.border.data != "no border":
-            img = ImageOps.expand(img, border=35, fill=form.border.data)
-        if "Smooth" in form.edge_detection.data:
-            img = img.filter(ImageFilter.SMOOTH)
-        if "Edges" in form.edge_detection.data:
-            img = img.filter(ImageFilter.FIND_EDGES)
-        if "Enhance" in form.edge_detection.data:
-            img = img.filter(ImageFilter.EDGE_ENHANCE)
-        if form.reduce.data:
-            img = img.reduce(form.reduce.data)
+        img = image_editor(img, form)
 
-        img.save("static/images/edit.JPG")
         flash("Image edits applied", 'info')
         return redirect(f"/image/{id}/edit/preview")
 
-    return render_template('edit_image.html', image=image, size=size, form=form)
+    return render_template('edit_image.html', image=image, size=img.size, form=form)
 
 
 @app.get('/image/<int:id>/edit/preview')
@@ -221,38 +173,43 @@ def preview_edit(id):
         return redirect('/')
 
     img = PilImage.open("static/images/edit.JPG")
-    size = img.size
 
-    return render_template('preview_edit.html', id=id, size=size)
+    return render_template('preview_edit.html', id=id, size=img.size)
 
 
-@app.route('/uploadedit', methods=['GET', 'POST'])
+@app.route('/image/uploadedit', methods=['GET', 'POST'])
 def upload_edit_image():
     """ Get: Renders form to upload an edited image.
         Post: Saves form data to database, uploads image to S3,
         and redirects to image details page. """
 
-    form = EditImageForUploadForm()
+    form = EditImageUploadForm()
 
     if form.validate_on_submit():
-        filename = form.file_name.data
-        with open(os.path.join("static/images/edit.JPG"), 'rb') as photo:
-            try:
-                s3.upload_fileobj(photo, BUCKET, filename)
-            except ClientError:
-                flash("Image upload was not successful", 'danger')
-                return redirect('/addimage')
-
+        filename = form.filename.data
         image_name = form.image_name.data
         uploaded_by = form.uploaded_by.data
         notes = form.notes.data
 
+        result = Image.query.filter_by(filename = filename).first()
+        if result:
+            flash("Filename already exists, please rename the image.", 'danger')
+            return redirect('/addimage')
+
+        with open(os.path.join("static/images/edit.JPG"), 'rb') as img:
+            try:
+                s3.upload_fileobj(img, BUCKET_NAME, filename)
+            except ClientError:
+                flash("Image could not be uploaded to server", 'danger')
+                return redirect('/addimage')
+
+        # save form data and aws-s3 url path to database
         image = Image(
             image_name=image_name,
             uploaded_by=uploaded_by,
-            notes=notes,
             filename=filename,
-            amazon_file_path=f"http://{BUCKET}.s3.us-west-1.amazonaws.com/{filename}"
+            notes=notes,
+            s3_url_path=f"http://{BUCKET_NAME}.s3.us-west-1.amazonaws.com/{filename}"
         )
 
         try:
@@ -260,13 +217,51 @@ def upload_edit_image():
             db.session.commit()
             os.remove("static/images/edit.jpg")
         except IntegrityError:
-            flash("Filename already exists, please choose a different name.", 'danger')
-            return redirect('/uploadedit')
+            flash("Form data could not be saved, please try again.", 'danger')
+            return redirect('/image/uploadedit')
 
         flash("Image successfully uploaded!", 'success')
         return redirect(f'/image/{image.id}')
 
     return render_template('upload_edit.html', form=form)
+
+
+@app.route('/image/<int:id>/delete', methods=['GET', 'POST'])
+def delete_image(id):
+
+    try:
+        image = Image.query.get_or_404(id)
+    except:
+        flash("Image ID not found.", 'danger')
+        return redirect('/')
+
+    form = DeleteImageForm()
+
+    if form.validate_on_submit():
+        code = form.code.data
+
+        if code == SECRET_DELETE_KEY:
+            try:
+                s3.delete_object(
+                    Bucket=BUCKET_NAME,
+                    Key=image.filename)
+            except ClientError:
+                print(ClientError)
+                flash("Image could not be deleted to server", 'warning')
+                return redirect(f'/image/{image.id}/delete')
+
+            Image_Metadata.query.filter(Image_Metadata.image_id == image.id).delete()
+            db.session.delete(image)
+            db.session.commit()
+
+            flash("Image deleted from server", 'info')
+            return redirect('/')
+        else:
+            flash("Invalid delete code.", 'warning')
+            return redirect(f'/image/{image.id}/delete')
+
+    return render_template('delete_image.html', image=image, form=form)
+
 
 
 @app.route('/<string:path>')
@@ -276,43 +271,3 @@ def catch_all(path):
     flash("Invalid URL route.", 'warning')
     return redirect('/')
 
-
-# Lightning round:
-
-# experience:
-#   - considering user interaction with site changed how we approached redirects and routing
-#   - coming back to server-side rendering, react would've made app more dynamic(redirects)
-#   - client side render > server side, seemed clunky
-
-#   - rediscovering flask & reading thru all 1000 pages of aws docs(static bucket), read thru pillow docs
-#   - opened eyes on how much we can deliver in a timeframe, too ambitious with react(not a single test)
-
-# features:
-#   - pillow, processes img and edits
-#   - search(exif)
-
-# bugs:
-#   - format of exif data, psql can't store the metadata raw form which comes in as ifdrational
-#   - (inefficient) writing/saving img to local before sending to amazon,then delete after upload
-#       couldn't read img file properly with boto3/s3 upload_fileobj
-#   - overlapping filenames in amazon are not distinguishable, will overwrite previous object in bucket
-#       will need a unique column in db for filename because links for amazon objects dynamically generated by filename
-#   - testing, on save, formatter moves app above environment declaration, wiped production db
-
-# improvements for future(D I 2.0):
-#   - react frontend (editing img will be more robust because re-renders after state change)
-#   - full text search is not fully functional
-#   - could potentially add users/auth | tags for photos and new db table relations
-#   - more features like adding photos, albums
-
-# PSQL DB:
-# - select id, title, description, published_at FROM video WHERE to_tsvector(title || ' ' || description) @@ to_tsquery(term)
-
-
-# talking points:
-#   - (zhen)intro: introduce us and the app that we built(Discount IG), description: app for uploading, sharing, editing photos
-#   - (jordan)walk thru app(home, features for search, add, edit, reupload)
-#   - (zhen)bugs, psql topics
-#   - (jordan)potential improvements, if had more time...
-#        edited/downloaded&reuploaded photos do not have exif data to query by, unsure about how we want
-#   - both talk about experience

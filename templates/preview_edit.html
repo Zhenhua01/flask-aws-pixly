@@ -8,9 +8,16 @@
   <div class="col-md-7 d-flex flex-column mt-5">
     <img class="photo-details" src="/static/images/edit.JPG" alt="">
     <p>Image Size: {{ size[0] }} * {{ size[1] }}</p>
-    <form class="d-flex justify-content-around" enctype="multipart/form-data" action="/uploadedit" id="preview_image">
-      <button type="submit" formaction="/image/{{id}}/edit" class="btn btn-danger btn-lg">Discard Changes</button>
-      <button type="submit" class="btn btn-primary btn-lg">Upload Changes</button>
+    <form class="d-flex justify-content-around" enctype="multipart/form-data"
+          action="/image/uploadedit"
+          id="preview_image">
+      <button type="submit" formaction="/image/{{id}}/edit"
+              class="btn btn-danger btn-lg">
+              Discard Changes
+      </button>
+      <button type="submit" class="btn btn-primary btn-lg">
+        Upload Changes
+      </button>
     </form>
   </div>
 </div>

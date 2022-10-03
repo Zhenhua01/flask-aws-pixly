@@ -2,18 +2,19 @@
 
 {% block content %}
 <div class="container d-flex flex-column align-items-center">
-  <img class="photo-details" src="{{ image.amazon_file_path }}" alt="">
+  <img class="photo-details" src="{{ image.s3_url_path }}" alt="">
   <div class="mt-3 mb-3">
     <h5>
       Name: {{image.image_name}}
     </h5>
     <h5>
-      Uploaded by: {{image.uploaded_by}}, on {{image.upload_date.strftime('%Y-%m-%d')}}
+      Uploaded by: {{image.uploaded_by}}, {{image.upload_date.strftime('%Y-%m-%d')}}
     </h5>
     <h5>
       Notes: {{image.notes}}
     </h5>
   </div>
   <a href="/image/{{image.id}}/edit" class="btn btn-primary btn-lg">Edit Image</a>
+  <a href="/image/{{image.id}}/delete" class="btn btn-danger btn-lg">Delete Image</a>
 </div>
 {% endblock %}

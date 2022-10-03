@@ -21,7 +21,7 @@ os.environ['DATABASE_URL'] = "postgresql:///pixly_test"
 
 # Now we can import app
 
-# TODO: from app import app
+from app import app
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
