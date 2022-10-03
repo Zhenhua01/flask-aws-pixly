@@ -25,7 +25,6 @@ from app import app
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
-
 db.create_all()
 
 
@@ -35,11 +34,11 @@ class ImageModelTestCase(TestCase):
         Image.query.delete()
 
         image = Image(
-            image_name="test",
+            image_name="test_name",
             uploaded_by="test_user",
-            notes="notes",
+            notes="test_notes",
             filename="testfile.jpg",
-            amazon_file_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
+            s3_url_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
         )
 
         db.session.add(image)
@@ -53,22 +52,22 @@ class ImageModelTestCase(TestCase):
         db.session.rollback()
 
     def test_image_model(self):
-        """test if image is created successfully"""
+        """test if image data is created successfully"""
 
         img1 = Image.query.get(self.image_id)
 
         self.assertEqual(img1.filename, 'testfile.jpg')
-        self.assertEqual(img1.notes, 'notes')
+        self.assertEqual(img1.notes, 'test_notes')
 
     def test_empty_text(self):
-        """ test image model error for empty image string"""
+        """ test image model error for empty image name"""
 
         new_img = Image(
             image_name=None,
             uploaded_by="test_user",
             notes="notes",
             filename="testfile.jpg",
-            amazon_file_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
+            s3_url_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
         )
         db.session.add(new_img)
 

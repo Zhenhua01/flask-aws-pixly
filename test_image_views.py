@@ -40,7 +40,7 @@ class BaseViewTestCase(TestCase):
             uploaded_by="test_user",
             notes="notes",
             filename="testfile.jpg",
-            amazon_file_path="https://pixlybucket.s3.us-west-1.amazonaws.com/sampleone.JPG"
+            s3_url_path="https://pixlybucket.s3.us-west-1.amazonaws.com/sampleone.JPG"
         )
 
         db.session.add(image)
@@ -50,7 +50,7 @@ class BaseViewTestCase(TestCase):
 
         image_metadata = Image_Metadata(
             image_id=image.id,
-            name="resolution",
+            tag="resolution",
             value="high quality",
         )
 
@@ -127,7 +127,7 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('"/uploadedit"', html)
+            self.assertIn('"/image/uploadedit"', html)
             self.assertIn('Image Size', html)
             self.assertIn('Upload Changes', html)
 
@@ -136,7 +136,7 @@ class BaseViewTestCase(TestCase):
 
         with self.client as c:
 
-            resp = c.get('/uploadedit')
+            resp = c.get('/image/uploadedit')
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)

@@ -1,5 +1,6 @@
 import os
 import boto3
+import random
 from dotenv import load_dotenv
 
 from flask import Flask, render_template, flash, redirect, request
@@ -10,9 +11,9 @@ from forms import AddImageForm, EditImageForm, EditImageUploadForm, DeleteImageF
 from sqlalchemy.exc import IntegrityError
 from botocore.exceptions import ClientError
 
-import random
+from io import BytesIO
 from image_processing import (
-    search_images, extract_exif, save_image, image_editor)
+    search_images, extract_exif, image_editor, save_image)
 from PIL import Image as PilImage
 
 
@@ -66,42 +67,33 @@ def add_image():
     form = AddImageForm()
 
     if form.validate_on_submit():
-        photo = form.photo.data
-        image_name = form.image_name.data
-        uploaded_by = form.uploaded_by.data
-        notes = form.notes.data
         filename = secure_filename(photo.filename)
 
-        result = Image.query.filter_by(filename = filename).first()
-        if result:
-            flash("Filename already exists, please rename the image.", 'danger')
+        if Image.query.filter_by(filename = filename).first():
+            flash("Filename already exists, please rename the file.", 'danger')
             return redirect('/addimage')
 
-        # image_data = request.FILES[form.image.name].read()
-
-        # upload photo to aws-s3 server using boto3 client
-        photo.save(os.path.join(filename))
-        with open(filename, 'rb') as img:
-            try:
-                s3.upload_fileobj(img, BUCKET_NAME, filename)
-            except ClientError:
-                flash("Image could not be uploaded to server", 'danger')
-                return redirect('/addimage')
-
+        # read photo data as binary and upload to s3 server
+        try:
+            photo = form.photo.data
+            img = BytesIO(photo.read())
+            s3.upload_fileobj(img, BUCKET_NAME, filename)
+        except ClientError:
+            flash("Image could not be uploaded to server.", 'danger')
+            return redirect('/addimage')
 
         # save form data and aws-s3 url path to database
         image = Image(
-            image_name=image_name,
-            uploaded_by=uploaded_by,
+            image_name=form.image_name.data,
+            uploaded_by=form.uploaded_by.data,
+            notes=form.notes.data,
             filename=filename,
-            notes=notes,
             s3_url_path=f"http://{BUCKET_NAME}.s3.us-west-1.amazonaws.com/{filename}"
         )
 
         try:
             db.session.add(image)
             db.session.commit()
-            os.remove(filename)
         except IntegrityError:
             flash("Form data could not be saved, please try again.", 'danger')
             return redirect('/addimage')
@@ -119,7 +111,7 @@ def add_image():
         try:
             db.session.commit()
         except IntegrityError:
-            flash("Image EXIF data could not be saved.", 'danger')
+            flash("Image EXIF data could not be saved.", 'warning')
 
         flash("Image successfully uploaded!", 'success')
         return redirect(f"/image/{image.id}")
@@ -150,16 +142,16 @@ def edit_image(id):
         flash("Image ID not found.", 'danger')
         return redirect('/')
 
+    img = save_image(image.s3_url_path)
     form = EditImageForm()
 
     if form.validate_on_submit():
 
         img = image_editor(img, form)
 
-        flash("Image edits applied", 'info')
         return redirect(f"/image/{id}/edit/preview")
 
-    return render_template('edit_image.html', image=image, size=img.size, form=form)
+    return render_template('edit_image.html', image=image, form=form, size=img.size)
 
 
 @app.get('/image/<int:id>/edit/preview')
@@ -167,13 +159,14 @@ def preview_edit(id):
     """ Get: Renders preview page of edited image, preivew_edit.html. """
 
     try:
-        image = Image.query.get_or_404(id)
+        Image.query.get_or_404(id)
     except:
         flash("Image ID not found.", 'danger')
         return redirect('/')
 
-    img = PilImage.open("static/images/edit.JPG")
+    img = PilImage.open("static/temp/image_edit.jpg")
 
+    flash("Image edits applied", 'info')
     return render_template('preview_edit.html', id=id, size=img.size)
 
 
@@ -187,35 +180,32 @@ def upload_edit_image():
 
     if form.validate_on_submit():
         filename = form.filename.data
-        image_name = form.image_name.data
-        uploaded_by = form.uploaded_by.data
-        notes = form.notes.data
 
-        result = Image.query.filter_by(filename = filename).first()
-        if result:
+        if Image.query.filter_by(filename = filename).first():
             flash("Filename already exists, please rename the image.", 'danger')
             return redirect('/addimage')
 
-        with open(os.path.join("static/images/edit.JPG"), 'rb') as img:
+        with open("static/temp/image_edit.jpg", 'rb') as img:
             try:
                 s3.upload_fileobj(img, BUCKET_NAME, filename)
             except ClientError:
                 flash("Image could not be uploaded to server", 'danger')
-                return redirect('/addimage')
+                return redirect('/image/uploadedit')
 
         # save form data and aws-s3 url path to database
         image = Image(
-            image_name=image_name,
-            uploaded_by=uploaded_by,
+            image_name=form.image_name.data,
+            uploaded_by=form.uploaded_by.data,
             filename=filename,
-            notes=notes,
+            notes=form.notes.data,
             s3_url_path=f"http://{BUCKET_NAME}.s3.us-west-1.amazonaws.com/{filename}"
         )
 
         try:
             db.session.add(image)
             db.session.commit()
-            os.remove("static/images/edit.jpg")
+            img = PilImage.open("static/temp/default_img.jpg")
+            img.save("static/temp/image_edit.jpg")
         except IntegrityError:
             flash("Form data could not be saved, please try again.", 'danger')
             return redirect('/image/uploadedit')

@@ -26,7 +26,6 @@ from app import app
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
-
 db.create_all()
 
 
@@ -40,7 +39,7 @@ class ImageMetadataModelTestCase(TestCase):
             uploaded_by="test_user",
             notes="notes",
             filename="testfile.jpg",
-            amazon_file_path="http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
+            s3_url_path="http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
         )
 
         db.session.add(image)
@@ -50,7 +49,7 @@ class ImageMetadataModelTestCase(TestCase):
 
         image_metadata = Image_Metadata(
             image_id=image.id,
-            name="resolution",
+            tag="resolution",
             value="high quality",
         )
 
@@ -70,15 +69,15 @@ class ImageMetadataModelTestCase(TestCase):
         metadata1 = Image_Metadata.query.get(self.image_metadata_id)
 
         self.assertEqual(metadata1.image_id, self.image_id)
-        self.assertEqual(metadata1.name, 'resolution')
+        self.assertEqual(metadata1.tag, 'resolution')
         self.assertEqual(metadata1.value, "high quality")
 
     def test_empty_text(self):
-        """ test image model error for empty image string"""
+        """test image model error for empty image string"""
 
         new_metadata = Image_Metadata(
             image_id=self.image_id,
-            name="resolution",
+            tag="resolution",
             value=None,
         )
 

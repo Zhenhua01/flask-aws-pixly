@@ -45,10 +45,9 @@ def extract_exif(photo):
 
 
 def save_image(s3_location):
-
     response = requests.get(s3_location)
     img = PilImage.open(BytesIO(response.content))
-    img.save("static/images/edit.JPG")
+    img.save("static/temp/image_edit.jpg")
 
     return img
 
@@ -77,7 +76,7 @@ def image_editor(img, form):
     if form.reduce.data:
         img = img.reduce(form.reduce.data)
 
-    img.save("static/images/edit.JPG")
+    img.save("static/temp/image_edit.jpg")
 
     return img
 
