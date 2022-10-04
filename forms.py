@@ -91,7 +91,7 @@ class EditImageUploadForm(FlaskForm):
 
 
 class DeleteImageForm(FlaskForm):
-    """ Form for code to delete an image. """
+    """ Form for admin code to delete an image. """
 
     code = PasswordField('Please confirm delete with admin code:', validators=[
         DataRequired(),

@@ -52,7 +52,7 @@ class ImageModelTestCase(TestCase):
         db.session.rollback()
 
     def test_image_model(self):
-        """test if image data is created successfully"""
+        """Test if image metadata is created successfully."""
 
         img1 = Image.query.get(self.image_id)
 
@@ -60,7 +60,7 @@ class ImageModelTestCase(TestCase):
         self.assertEqual(img1.notes, 'test_notes')
 
     def test_empty_text(self):
-        """ test image model error for empty image name"""
+        """Test if image metadata model error for empty image name."""
 
         new_img = Image(
             image_name=None,
@@ -70,5 +70,4 @@ class ImageModelTestCase(TestCase):
             s3_url_path=f"http://test.s3.us-west-1.amazonaws.com/testfile.jpg"
         )
         db.session.add(new_img)
-
         self.assertRaises(IntegrityError, db.session.commit)

@@ -4,6 +4,8 @@ from PIL import Image as PilImage, TiffImagePlugin, ExifTags, ImageFilter, Image
 from models import Image, Image_Metadata
 
 def search_images(search):
+    """Query databbase images or query based on search term, returns results."""
+
     id_list = []
 
     metadata_search = Image_Metadata.query.filter(
@@ -26,32 +28,37 @@ def search_images(search):
 
 
 def extract_exif(photo):
+    """Extracts exif data from image metadata and returns data as dictionary."""
 
-        image = PilImage.open(photo)
-        image_metadata = image.getexif()
-        TAGS = ExifTags.TAGS
-        exif_data = {}
+    image = PilImage.open(photo)
+    image_metadata = image.getexif()
+    TAGS = ExifTags.TAGS
+    exif_data = {}
 
-        for tag, data in image_metadata.items():
-            if tag in TAGS:
-                if isinstance(data, TiffImagePlugin.IFDRational):
-                    data = float(data)
-                elif isinstance(data, bytes):
-                    data = data.decode(errors="replace")
+    for tag, data in image_metadata.items():
+        if tag in TAGS:
+            if isinstance(data, TiffImagePlugin.IFDRational):
+                data = float(data)
+            elif isinstance(data, bytes):
+                data = data.decode(errors="replace")
 
-                exif_data[TAGS[tag]] = data
+            exif_data[TAGS[tag]] = data
 
-        return exif_data
+    return exif_data
 
 
 def save_image(s3_location):
+    """Loads image from S3 server, saves to temp folder, and returns image."""
+
     response = requests.get(s3_location)
     img = PilImage.open(BytesIO(response.content))
     img.save("static/temp/image_edit.jpg")
 
     return img
 
+
 def image_editor(img, form):
+    """Edits image based on form data and returns edited image."""
 
     img = custom_colors(img, form)
 
@@ -82,6 +89,7 @@ def image_editor(img, form):
 
 
 def custom_colors(img, form):
+    """Edits image based on form data color fields and returns edit image."""
 
     rgb_form = [form.red.data or 0,
                form.green.data or 0,
@@ -113,6 +121,7 @@ def custom_colors(img, form):
 
 
 def sepia(img):
+    """Adds sepia tones to entire image and returns edited image."""
 
     img_pixels = img.load()
     width, height = img.size

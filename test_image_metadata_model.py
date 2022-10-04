@@ -64,7 +64,7 @@ class ImageMetadataModelTestCase(TestCase):
         db.session.rollback()
 
     def test_image_model(self):
-        """test if image is created successfully"""
+        """Test if image is created successfully."""
 
         metadata1 = Image_Metadata.query.get(self.image_metadata_id)
 
@@ -73,7 +73,7 @@ class ImageMetadataModelTestCase(TestCase):
         self.assertEqual(metadata1.value, "high quality")
 
     def test_empty_text(self):
-        """test image model error for empty image string"""
+        """Test image model errors for empty image string."""
 
         new_metadata = Image_Metadata(
             image_id=self.image_id,
@@ -82,5 +82,4 @@ class ImageMetadataModelTestCase(TestCase):
         )
 
         db.session.add(new_metadata)
-
         self.assertRaises(IntegrityError, db.session.commit)

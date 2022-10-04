@@ -67,7 +67,7 @@ class BaseViewTestCase(TestCase):
 
 
     def test_home_page(self):
-        """ tests if home page renders correctly"""
+        """Tests if home page renders correctly."""
 
         with self.client as c:
 
@@ -75,12 +75,13 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('Search', html)
+            self.assertIn('id="search_form"', html)
             self.assertIn('Add New Image', html)
+            self.assertIn('class="image_card', html)
 
 
-    def test_addimage(self):
-        """ tests add image page renders correctly """
+    def test_add_image(self):
+        """Tests add image page renders correctly."""
 
         with self.client as c:
 
@@ -88,12 +89,12 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('<form method="POST"', html)
-            self.assertIn('Upload a New Image', html)
+            self.assertIn('id="add_image_form"', html)
+            self.assertIn('type="submit"', html)
 
 
     def test_image_detail(self):
-        """ tests image detail page renders correctly """
+        """Tests image detail page renders correctly """
 
         with self.client as c:
 
@@ -101,12 +102,12 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('class="photo-details"', html)
-            self.assertIn('test', html)
-            self.assertIn('notes', html)
+            self.assertIn('class="image', html)
+            self.assertIn('class="image_detail', html)
+            self.assertIn('Notes', html)
 
-    def test_image_edit(self):
-        """ tests edit image page renders correctly """
+    def test_edit_image(self):
+        """Tests edit image page renders correctly."""
 
         with self.client as c:
 
@@ -114,12 +115,12 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('<form method="POST"', html)
-            self.assertIn('Tone', html)
-            self.assertIn('Border', html)
+            self.assertIn('id="edit_image_form"', html)
+            self.assertIn('class="image', html)
+            self.assertIn('type="submit"', html)
 
-    def test_image_edit_preview(self):
-        """ tests edit image preview page renders correctly """
+    def test_edit_image_preview(self):
+        """Tests edited image preview page renders correctly."""
 
         with self.client as c:
 
@@ -127,12 +128,12 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
+            self.assertIn('class="image', html)
             self.assertIn('"/image/uploadedit"', html)
-            self.assertIn('Image Size', html)
-            self.assertIn('Upload Changes', html)
+            self.assertIn('class="btn btn', html)
 
     def test_upload_edit(self):
-        """ tests edit image preview page renders correctly """
+        """Tests edited image upload page renders correctly."""
 
         with self.client as c:
 
@@ -140,12 +141,26 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('<form method="POST"', html)
-            self.assertIn('class="photo-details"', html)
-            self.assertIn('Upload Image!', html)
+            self.assertIn('class="image', html)
+            self.assertIn('id="upload_edit_form"', html)
+            self.assertIn('type="submit"', html)
+
+    def test_delete_image(self):
+        """Tests deleting image page renders correctly."""
+
+        with self.client as c:
+
+            resp = c.get(f'/image/{self.image_id}/delete')
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('class="image', html)
+            self.assertIn('id="delete_image_form"', html)
+            self.assertIn('type="submit"', html)
+
 
     def test_invalid_routes(self):
-        """ tests edit image preview page renders correctly """
+        """Tests invalid route redirects to home page."""
 
         with self.client as c:
 

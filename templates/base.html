@@ -3,50 +3,47 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Pixly Images</title>
+  <title>Pixly!</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap@5/dist/css/bootstrap.css">
-  <script src="https://unpkg.com/bootstrap"></script>
-
+  <!-- <link rel="stylesheet" href="https://unpkg.com/bootstrap@5/dist/css/bootstrap.css">
+  <script src="https://unpkg.com/bootstrap"></script> -->
   <link rel="stylesheet" href="https://www.unpkg.com/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/static/stylesheets/bootstrap.min.css">
   <link rel="stylesheet" href="/static/stylesheets/style.css">
-
+  <link rel="shortcut icon" href="/static/favicon.ico">
 </head>
 
-<body class="container">
+<body class="container-fluid">
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand navbar-dark bg-primary mx-5 mb-3">
     <div class="container-fluid">
+      <a class="navbar-brand" style="font-size: xx-large" href="/">Pixly Images</a>
 
-      <div class="navbar-header">
-        <a href="/" class="navbar-brand">
-          <span>Pixly!</span>
-        </a>
+      <div class="navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav ms-auto mb-2 mt-2">
+          <li class="nav-item" style="font-size: x-large">
+            <a class="nav-link" href="/addimage"><b>Add New Image</b></a>
+          </li>
+        </ul>
+
+        <form class="d-flex" action="/" id="search_form">
+          <input class="form-control me-sm-2"
+                  name="search"
+                  type="text"
+                  placeholder="search for images">
+          <button class="btn btn-secondary my-2 my-sm-0"
+                  type="submit">
+                  Search
+          </button>
+        </form>
       </div>
-
-      <div class="navbar navbar-nav">
-        <div class="nav-link">
-          <a href="/addimage" class="nav-link">
-            <b>Add New Image</b>
-          </a>
-        </div>
-
-        <div>
-          <form class="d-flex navbar-form navbar-end" action="/">
-            <input name="search" class="form-control"
-                    placeholder="search for images"
-                    aria-label="Search">
-            <button class="btn btn-primary btn-sm">Search</button>
-          </form>
-        </div>
-      </div>
-
     </div>
   </nav>
 
   {% for category, message in get_flashed_messages(with_categories=True) %}
-  <div class="alert alert-{{ category }}">{{ message }}</div>
+  <div class="alert alert-{{ category }} mx-5">
+    {{ message }}
+  </div>
   {% endfor %}
 
   {% block content %}

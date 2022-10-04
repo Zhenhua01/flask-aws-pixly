@@ -2,12 +2,18 @@
 
 {% block content %}
 
-<div class="row justify-content-md-center">
-  <h2 class="mt-3 mb-3 add_image">Upload an Edited Image</h2>
-  <div class="col-md-7 d-flex flex-column">
+<div class="container-fluid col-6 offset-3">
 
-    <img class="photo-details" src="/static/temp/image_edit.JPG" alt="edited-img">
-    <form method="POST" enctype="multipart/form-data" id="upload_image_form">
+  <div class="mt-4 mb-3">
+    <img class="image img-fluid"
+          style="max-width: 100%"
+          src="/static/temp/image_edit.JPG"
+          alt="">
+  </div>
+
+  <h3>Upload an Edited Image</h3>
+  <div class="form-group justify-content-center">
+    <form method="POST" enctype="multipart/form-data" id="upload_edit_form">
       {{ form.hidden_tag() }}
 
       {% for field in form
@@ -19,12 +25,11 @@
       {{ field(class="form-control") }}
       {% endfor %}
 
-      <div class="d-flex justify-content-md-center mt-3">
-        <button class="btn btn-success btn-lg">Upload Image!</button>
-      </div>
+      <br>
+      <button type="submit" class="btn btn-success btn-lg">Upload Image!</button>
     </form>
   </div>
-</div>
 
+</div>
 
 {% endblock %}

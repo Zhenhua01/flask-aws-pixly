@@ -45,7 +45,7 @@ BUCKET_NAME = os.environ['BUCKET_NAME']
 
 @app.get('/')
 def homepage():
-    """Display home page with list of top 12 images or display search results."""
+    """Display home page with list of top 12 images or display results."""
 
     search = request.args.get('search') and request.args.get('search').lower()
     if search:
@@ -60,13 +60,14 @@ def homepage():
 
 @app.route('/addimage', methods=['GET', 'POST'])
 def add_image():
-    """ Get: Renders form to add a new image, add_image html.
-        Post: Saves form data to database, uploads image to S3,
-        and redirects to image details page. """
+    """Get: Renders form to add a new image, add_image html.
+    Post: Saves form data to database, uploads image to S3 server,
+    and redirects to image details page."""
 
     form = AddImageForm()
 
     if form.validate_on_submit():
+        photo = form.photo.data
         filename = secure_filename(photo.filename)
 
         if Image.query.filter_by(filename = filename).first():
@@ -75,7 +76,6 @@ def add_image():
 
         # read photo data as binary and upload to s3 server
         try:
-            photo = form.photo.data
             img = BytesIO(photo.read())
             s3.upload_fileobj(img, BUCKET_NAME, filename)
         except ClientError:
@@ -98,7 +98,7 @@ def add_image():
             flash("Form data could not be saved, please try again.", 'danger')
             return redirect('/addimage')
 
-        # get exif_data from photo and save to database
+        # get exif_data from photo and save metadata to database
         exif_data = extract_exif(photo)
         for tag in exif_data:
             metadata = Image_Metadata(
@@ -121,7 +121,7 @@ def add_image():
 
 @app.get('/image/<int:id>')
 def show_image(id):
-    """ Get: Renders image detail page, image.html"""
+    """Get: Renders image detail page, image.html."""
 
     try:
         image = Image.query.get_or_404(id)
@@ -133,8 +133,8 @@ def show_image(id):
 
 @app.route('/image/<int:id>/edit', methods=['GET', 'POST'])
 def edit_image(id):
-    """ Get: Renders form to select image edits, edit_image.html.
-        Post: Process image edits and displays preview page."""
+    """Get: Renders form to select image edits, edit_image.html.
+    Post: Process image edits and displays preview page."""
 
     try:
         image = Image.query.get_or_404(id)
@@ -143,12 +143,12 @@ def edit_image(id):
         return redirect('/')
 
     img = save_image(image.s3_url_path)
+
     form = EditImageForm()
 
     if form.validate_on_submit():
 
         img = image_editor(img, form)
-
         return redirect(f"/image/{id}/edit/preview")
 
     return render_template('edit_image.html', image=image, form=form, size=img.size)
@@ -156,7 +156,7 @@ def edit_image(id):
 
 @app.get('/image/<int:id>/edit/preview')
 def preview_edit(id):
-    """ Get: Renders preview page of edited image, preivew_edit.html. """
+    """Get: Renders preview page of edited image, preivew_edit.html."""
 
     try:
         Image.query.get_or_404(id)
@@ -165,6 +165,7 @@ def preview_edit(id):
         return redirect('/')
 
     img = PilImage.open("static/temp/image_edit.jpg")
+    img.close()
 
     flash("Image edits applied", 'info')
     return render_template('preview_edit.html', id=id, size=img.size)
@@ -172,9 +173,9 @@ def preview_edit(id):
 
 @app.route('/image/uploadedit', methods=['GET', 'POST'])
 def upload_edit_image():
-    """ Get: Renders form to upload an edited image.
-        Post: Saves form data to database, uploads image to S3,
-        and redirects to image details page. """
+    """Get: Renders form to upload an edited image, upload_edit.html.
+    Post: Saves form data to database, uploads image to S3 server,
+    and redirects to image details page."""
 
     form = EditImageUploadForm()
 
@@ -218,6 +219,9 @@ def upload_edit_image():
 
 @app.route('/image/<int:id>/delete', methods=['GET', 'POST'])
 def delete_image(id):
+    """Get: Renders form to confirm deleting an image, delete_image.html.
+    Post: Confirms secret admin code to delete an image,
+    removes image S3 server and removes image image data from database."""
 
     try:
         image = Image.query.get_or_404(id)
@@ -236,7 +240,6 @@ def delete_image(id):
                     Bucket=BUCKET_NAME,
                     Key=image.filename)
             except ClientError:
-                print(ClientError)
                 flash("Image could not be deleted to server", 'warning')
                 return redirect(f'/image/{image.id}/delete')
 
@@ -253,10 +256,9 @@ def delete_image(id):
     return render_template('delete_image.html', image=image, form=form)
 
 
-
 @app.route('/<string:path>')
 def catch_all(path):
-    """Function to catch all invalid routes and redirect to home page. """
+    """Function to catch all invalid routes and redirect to home page."""
 
     flash("Invalid URL route.", 'warning')
     return redirect('/')

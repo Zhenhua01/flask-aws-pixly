@@ -62,7 +62,7 @@ class Image(db.Model):
 
 
 class Image_Metadata(db.Model):
-    """Table for images metadata."""
+    """Table for image metadata."""
 
     __tablename__ = 'metadata'
 
