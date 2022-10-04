@@ -5,12 +5,11 @@
 <div class="col-6 offset-3 align-items-center">
   <div class="mt-4">
     <img class="image img-fluid"
-    style="max-width: 100%"
     src="{{ image.s3_url_path }}"
     alt="">
   </div>
 
-  <div class="image_detail mt-4 mb-4">
+  <div class="image-detail mt-4 mb-4">
     <h6>Image Name: {{ image.image_name }}</h6>
     <h6>From: {{ image.uploaded_by }}</h6>
     <h6>Uploaded: {{ image.upload_date.strftime('%Y-%m-%d') }}</h6>

@@ -6,14 +6,13 @@
 
   <div class="mt-4 mb-4">
     <img class="image img-fluid"
-          style="max-width: 100%"
-          src="/static/temp/image_edit.jpg"
+          src="{{image.s3_url_path}}"
           alt="">
   </div>
 
   <h3>Delete Image </h3>
   <div class="form-group justify-content-center">
-    <form method="POST" enctype="multipart/form-data" id="delete_image_form">
+    <form method="POST" enctype="multipart/form-data" id="delete-image-form">
       {{ form.hidden_tag() }}
 
       {% for field in form
@@ -25,6 +24,7 @@
       {{ field(class="form-control") }}
       {% endfor %}
 
+      <br>
       <button type="submit" class="btn btn-danger btn-lg">Confirm Delete</button>
     </form>
   </div>

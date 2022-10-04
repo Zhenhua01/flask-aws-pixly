@@ -6,14 +6,13 @@
 
   <div class="mt-4 mb-3">
     <img class="image img-fluid"
-          style="max-width: 100%"
           src="/static/temp/image_edit.JPG"
           alt="">
   </div>
 
   <h3>Upload an Edited Image</h3>
   <div class="form-group justify-content-center">
-    <form method="POST" enctype="multipart/form-data" id="upload_edit_form">
+    <form method="POST" enctype="multipart/form-data" id="upload-edit-form">
       {{ form.hidden_tag() }}
 
       {% for field in form
@@ -26,7 +25,7 @@
       {% endfor %}
 
       <br>
-      <button type="submit" class="btn btn-success btn-lg">Upload Image!</button>
+      <button type="submit" class="btn btn-success btn-lg">Upload Image</button>
     </form>
   </div>
 

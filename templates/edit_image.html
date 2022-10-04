@@ -6,7 +6,6 @@
 
   <div class="mt-4">
     <img class="image img-fluid"
-          style="max-width: 100%"
           src="/static/temp/image_edit.jpg"
           alt="">
     <p>Image Size: {{ size[0] }} x {{ size[1] }}</p>
@@ -14,7 +13,7 @@
 
   <h3>Edit Image </h3>
   <div class="form-group justify-content-center">
-    <form method="POST" enctype="multipart/form-data" id="edit_image_form">
+    <form method="POST" enctype="multipart/form-data" id="edit-image-form">
       {{ form.hidden_tag() }}
 
       {% for field in form

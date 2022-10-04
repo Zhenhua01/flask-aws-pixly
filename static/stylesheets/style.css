@@ -1,0 +1,20 @@
+body {
+    margin-bottom: 3em;
+}
+
+.navbar-brand {
+    font-size: xx-large;
+}
+
+.nav-link {
+    color: white;
+}
+
+.nav-link :hover {
+    color: gainsboro;
+}
+
+.image {
+    max-width: 100%;
+}
+

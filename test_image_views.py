@@ -75,7 +75,7 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('id="search_form"', html)
+            self.assertIn('id="search-form"', html)
             self.assertIn('Add New Image', html)
             self.assertIn('class="image_card', html)
 
@@ -89,7 +89,7 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('id="add_image_form"', html)
+            self.assertIn('id="add-image-form"', html)
             self.assertIn('type="submit"', html)
 
 
@@ -103,7 +103,7 @@ class BaseViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('class="image', html)
-            self.assertIn('class="image_detail', html)
+            self.assertIn('class="image-detail', html)
             self.assertIn('Notes', html)
 
     def test_edit_image(self):
@@ -115,7 +115,7 @@ class BaseViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('id="edit_image_form"', html)
+            self.assertIn('id="edit-image-form"', html)
             self.assertIn('class="image', html)
             self.assertIn('type="submit"', html)
 
@@ -142,7 +142,7 @@ class BaseViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('class="image', html)
-            self.assertIn('id="upload_edit_form"', html)
+            self.assertIn('id="upload-edit-form"', html)
             self.assertIn('type="submit"', html)
 
     def test_delete_image(self):
@@ -155,7 +155,7 @@ class BaseViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('class="image', html)
-            self.assertIn('id="delete_image_form"', html)
+            self.assertIn('id="delete-image-form"', html)
             self.assertIn('type="submit"', html)
 
 
