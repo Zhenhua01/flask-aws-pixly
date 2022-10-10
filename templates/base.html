@@ -2,11 +2,19 @@
 <html lang="en">
 
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FFKHWQNKZF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-FFKHWQNKZF');
+  </script>
+
   <meta charset="UTF-8">
   <title>Pixly!</title>
 
-  <!-- <link rel="stylesheet" href="https://unpkg.com/bootstrap@5/dist/css/bootstrap.css">
-  <script src="https://unpkg.com/bootstrap"></script> -->
   <link rel="stylesheet" href="https://www.unpkg.com/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/static/stylesheets/bootstrap.min.css">
   <link rel="stylesheet" href="/static/stylesheets/style.css">
@@ -27,13 +35,9 @@
         </ul>
 
         <form class="d-flex" action="/" id="search-form">
-          <input class="form-control me-sm-2"
-                  name="search"
-                  type="text"
-                  placeholder="search for images">
-          <button class="btn btn-secondary my-2 my-sm-0"
-                  type="submit">
-                  Search
+          <input class="form-control me-sm-2" name="search" type="text" placeholder="search for images">
+          <button class="btn btn-secondary my-2 my-sm-0" type="submit">
+            Search
           </button>
         </form>
       </div>
