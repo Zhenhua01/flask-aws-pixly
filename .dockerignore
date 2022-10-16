@@ -1,0 +1,11 @@
+readme.md
+Dockerfile
+docker-compose.yml
+.git
+.gitignore
+.DS_Store
+.env
+venv/
+**/coverage
+**/__pycache__
+*.pyc

@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+
+  pixlydb:
+    container_name: pixlydb
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./pixlydocker.sql:/docker-entrypoint-initdb.d/pixlydocker.sql
+
+  # note: requires aws bucket access to use some s3 features
+  pixlyapp:
+    container_name: pixlyapp
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@pixlydb:5432/postgres
+      - SECRET_KEY=secret-key
+      - SECRET_DELETE_KEY=delete
+      - ACCESS_KEY_ID=""
+      - SECRET_ACCESS_KEY=""
+      - BUCKET_NAME=""
+    depends_on:
+      - pixlydb
+
+volumes:
+  pgdata: {}
+
+# optional: not required for single container stack
+# networks:
+#   default:
+#     name: warbler-network
+
+
+# to start containerized application, run:
+# $ docker-compose up -d
