@@ -1,7 +1,5 @@
 # Pixly Image App
 
-[Live Demo (Heroku)](http://pixly-zhl.herokuapp.com)
-
 Project: Full stack application for users to upload, edit, and save images. Users can also search stored images by keywords and image metadata automatically extracted from EXIF fields.
 
 ## Available Scripts
